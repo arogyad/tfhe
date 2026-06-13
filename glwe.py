@@ -2,7 +2,7 @@ import random
 from typing import List, Tuple
 from helper import *
 
-CipherText = Tuple[List[List[int]], List[int]]
+# CipherText = Tuple[List[List[int]], List[int]]
 
 class GLWE:
     def __init__(self, q: int, t: int, k: int, N: int):
@@ -15,9 +15,10 @@ class GLWE:
     def key_gen(self) -> List[List[int]]:
         return [[random.randint(0, 1) for _ in range(self.N)] for _ in range(self.k)]
 
-    def encrypt(self, S: List[List[int]], M: List[int]) -> CipherText:
+    def encrypt(self, S: List[List[int]], M: List[int]):
         A = [[random.randint(0, self.q - 1) for _ in range(self.N)] for _ in range(self.k)]
-        E = [random.gauss(0, 1) for _ in range(self.N)]
+        E = [round(random.gauss(0, 1)) for _ in range(self.N)]
+        # E = [0 for _ in range(self.N)] # during testing w/o bootstrapping
 
         B = [0] * self.N
 
@@ -32,7 +33,7 @@ class GLWE:
         
         return (A, B)
     
-    def decrypt(self, S: List[List[int]], C: CipherText) -> List[int]:
+    def decrypt(self, S: List[List[int]], C) -> List[int]:
         noisy = list(C[1])
 
         for i in range(self.k):
