@@ -1,0 +1,1 @@
+I am working on implementing tFHE from [The beginner's textbook for fully homomorphic encryption](https://arxiv.org/pdf/2503.05136). This implementation is in python as my focus now is understanding more than performance.
