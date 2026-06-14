@@ -30,6 +30,9 @@ class LWE:
         
         return round(temp / self.delta) % self.t
 
+    # i began with thinking maybe i should implement these functions as static method
+    # then i forgot about these declared in class and wrote other mul, sub in helper
+    # so this needs to be moved to helper for consistency
     def add_cc(self, c1: CipherTextLWE, c2: CipherTextLWE) -> CipherTextLWE:
         return ([(c1[0][i] + c2[0][i]) % self.q for i in range(self.k)], (c1[1] + c2[1]) % self.q)
 

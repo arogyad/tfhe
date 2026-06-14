@@ -50,6 +50,7 @@ def modulus_switch_test():
     lwe.q = 2 * N
     print(lwe.decrypt(S, c_2n))
 
+# pain to test
 def blind_rotation_test():
     def coefficient_vx(delta):
         V_poly = [0, delta, delta, 2*delta, 2*delta, 3*delta, 3*delta, 4*delta]
@@ -71,6 +72,7 @@ def blind_rotation_test():
     s = lwe.key_gen()
     s_bk = glwe.key_gen()
 
+    # need to "expand" the bit of the key so that the dimensions match
     s_ggsws = [ggsw.encrypt(s_bk, [bit] + [0]*(N-1)) for bit in s]
     
     c = lwe.encrypt(s, 15)
@@ -122,8 +124,9 @@ def gate_test(m1, m2, const):
     extracted_lwe = bootstrap(c_comb, V, s_ggsws, base, levels, N, q)
 
     extracted_a, extracted_b = extracted_lwe
+    # cheating here with the extracted_key, will have to implement keyswitching
     decrypted_lwe = (extracted_b - sum(a * sk for a, sk in zip(extracted_a, extracted_key))) % q
-    
+
     if decrypted_lwe > q // 2:
         decrypted_lwe -= q
 
@@ -136,14 +139,16 @@ if __name__ == "__main__":
     or_gate = lambda m1, m2: gate_test(m1, m2, 1)
 
     print("AND:")
-    and_gate(-1, -1)
-    and_gate(-1, 1)
-    and_gate(1, -1)
-    and_gate(1, 1)
+    and_gate(-1, -1) # -1
+    and_gate(-1, 1) # -1
+    and_gate(1, -1) # -1
+    and_gate(1, 1) # 1 !!
 
     print("OR:")
-    or_gate(-1, -1)
-    or_gate(-1, 1)
-    or_gate(1, -1)
-    or_gate(1, 1)
+    or_gate(-1, -1) # -1
+    or_gate(-1, 1) # 1
+    or_gate(1, -1) # 1
+    or_gate(1, 1) # 1 !!
+
+
 
