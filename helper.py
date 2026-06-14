@@ -1,5 +1,6 @@
 from typing import List
 
+
 # will implement NTT for this, currently just for testing tFHE
 def poly_mul(p1: List[int], p2: List[int], N: int, q: int) -> List[int]:
     result: List[int] = [0] * N
@@ -12,6 +13,45 @@ def poly_mul(p1: List[int], p2: List[int], N: int, q: int) -> List[int]:
                 result[(i + j)] += (p1[i] * p2[j])
     return result
 
+def poly_rotate(poly, rot, N, q):
+    rot = rot % (2 * N)
+    sign = 1
+    
+    if rot >= N:
+        sign = -1
+        rot -= N
+        
+    if rot == 0:
+        return [(x * sign) % q for x in poly]
+        
+    part1 = [(-x * sign) % q for x in poly[-rot:]]
+    part2 = [(x * sign) % q for x in poly[:-rot]]
+    
+    return part1 + part2
+
+# this c is LWE
+def modulus_switch(c, N, q):
+    a, b = c
+    
+    a_ = [round((2 * N * a_i) / q) % (2 * N) for a_i in a]
+    b_ = round((2 * N * b) / q) % (2 * N)
+
+    return (a_, b_)
+
+# c is GLWE
+def sample_extract(c):
+    A, B = c
+    N = len(B)
+    
+    b = B[0]
+    
+    a = []
+    for poly in A:
+        a.append(poly[0])
+        for j in range(1, N):
+            a.append(-poly[N - j])
+            
+    return (a, b)
 
 def gadget_decomposition(poly: List[int], N: int, base: int, levels: int) -> List[List[int]]:
     result = [ [ 0 ] * N for _ in range(levels)] 
@@ -74,6 +114,26 @@ def cmux(b_ggsw, d1_glwe, d0_glwe, base: int, levels: int, N: int, q: int):
     
     return glwe_add(prod, d0_glwe, q)
 
+def glwe_rotate(C, rot, N, q):
+    A, B = C
+    A_new = [poly_rotate(a, rot, N, q) for a in A]
+    B_new = poly_rotate(B, rot, N, q)
+    
+    return (A_new, B_new)
+
+def blind_rotation(V, a_, b_, s_ggsws, base, levels, N, q):
+    V0 = glwe_rotate(V, -b_, N, q)
+
+    for i in range(len(a_)):
+        d1 = glwe_rotate(V0, a_[i], N, q)
+        d0 = V0
+
+        sel = s_ggsws[i]
+
+        V0 = cmux(sel, d1, d0, base, levels, N, q)
+    
+    return V0
+
 if __name__ == "__main__":
-    poly = [27, 0, 0, 0]
-    print(gadget_decomposition(poly, 4, 4, 3))
+    poly = [2, 3, -4, -1]
+    print(poly_rotate(poly, -1, 4, 8)) # [3, 4, 7, 6] = [3, -4, -1, -2] mod q
