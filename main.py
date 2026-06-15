@@ -92,7 +92,7 @@ def blind_rotation_test():
     print("Decrypted Extracted LWE:", round(decrypted_lwe / delta))
 
 # no keyswitching
-def gate_test(m1, m2, const):
+def gate_test(m1, m2, const, v = 1):
     q = 4096   
     t = 8
     k = 4
@@ -117,7 +117,7 @@ def gate_test(m1, m2, const):
 
     c_comb = lwe.add_cp(lwe.add_cc(c1, c2), const)
 
-    V_poly = [1 * delta] * N 
+    V_poly = [v * delta] * N 
     masks = [[0] * N for _ in range(k)]
     V = (masks, V_poly)
 
@@ -134,9 +134,52 @@ def gate_test(m1, m2, const):
         
     print(f"Gate Output for ({m1}, {m2}): {result}")
 
+
+# with keyswitching
+def gate_test_key(m1, m2, const, v = 1):
+    q = 4096   
+    t = 8
+    k = 4
+    N = 8      
+    base = 8
+    levels = 4 
+    delta = q // t
+
+    k_base = 2
+    k_levels = 8
+
+    lwe = LWE(q, t, k)
+    glwe = GLWE(q, t, k, N)
+    glev = GleV(glwe, base, levels)
+    ggsw = GGSW(glev)
+
+    s = lwe.key_gen()
+    s_bk = glwe.key_gen()
+    
+    s_ggsws = [ggsw.encrypt(s_bk, [bit] + [0] * ( N - 1 )) for bit in s]
+    extracted_key = [coeff for poly in s_bk for coeff in poly]
+    KSK = generate_ksk(extracted_key, s, k_base, k_levels, q)
+
+    c1 = lwe.encrypt(s, m1)
+    c2 = lwe.encrypt(s, m2)
+
+    c_comb = lwe.add_cp(lwe.add_cc(c1, c2), const)
+
+    V_poly = [v * delta] * N 
+    masks = [[0] * N for _ in range(k)]
+    V = (masks, V_poly)
+
+    extracted_lwe = bootstrap(c_comb, V, s_ggsws, base, levels, N, q)
+
+    final_lwe = key_switch(extracted_lwe, KSK, k_base, k_levels, q)
+    result = lwe.decrypt(s, final_lwe)
+    print(f"Gate Output for ({m1}, {m2}): {result}")
+
+
 if __name__ == "__main__":
-    and_gate = lambda m1, m2: gate_test(m1, m2, -1)
-    or_gate = lambda m1, m2: gate_test(m1, m2, 1)
+    and_gate = lambda m1, m2: gate_test_key(m1, m2, -1)
+    or_gate = lambda m1, m2: gate_test_key(m1, m2, 1)
+    nand_gate = lambda m1, m2: gate_test_key(m1, m2, -1, -1)
 
     print("AND:")
     and_gate(-1, -1) # -1
@@ -149,6 +192,12 @@ if __name__ == "__main__":
     or_gate(-1, 1) # 1
     or_gate(1, -1) # 1
     or_gate(1, 1) # 1 !!
+
+    print("NAND:")
+    nand_gate(-1, -1) # 1
+    nand_gate(-1, 1) # 1
+    nand_gate(1, -1) # 1
+    nand_gate(1, 1) # -1 !!
 
 
 

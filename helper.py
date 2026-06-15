@@ -1,5 +1,5 @@
 from typing import List
-
+import random
 
 # will implement NTT for this, currently just for testing tFHE
 def poly_mul(p1: List[int], p2: List[int], N: int, q: int) -> List[int]:
@@ -13,7 +13,7 @@ def poly_mul(p1: List[int], p2: List[int], N: int, q: int) -> List[int]:
                 result[(i + j)] += (p1[i] * p2[j])
     return result
 
-def poly_rotate(poly, rot, N, q):
+def poly_rotate(poly: List[int], rot: int, N: int, q: int) -> List[int]:
     rot = rot % (2 * N)
     sign = 1
     
@@ -30,7 +30,7 @@ def poly_rotate(poly, rot, N, q):
     return part1 + part2
 
 # this c is LWE
-def modulus_switch(c, N, q):
+def modulus_switch(c, N: int, q: int):
     a, b = c
     
     a_ = [round((2 * N * a_i) / q) % (2 * N) for a_i in a]
@@ -74,13 +74,13 @@ def glwe_sub(C1, C2, q: int):
     return (A3, B3)
 
 def glwe_add(C1, C2, q: int):
-        A1, B1 = C1
-        A2, B2 = C2
+    A1, B1 = C1
+    A2, B2 = C2
 
-        A3 = [[(a1 + a2) % q for a1, a2 in zip(p1, p2)] for p1, p2 in zip(A1, A2)]
-        B3 = [(b1 + b2) % q for b1, b2 in zip(B1, B2)]
+    A3 = [[(a1 + a2) % q for a1, a2 in zip(p1, p2)] for p1, p2 in zip(A1, A2)]
+    B3 = [(b1 + b2) % q for b1, b2 in zip(B1, B2)]
 
-        return (A3, B3)
+    return (A3, B3)
 
 def glwe_mul(C, poly, N, q):
     A, B = C
@@ -114,7 +114,7 @@ def cmux(b_ggsw, d1_glwe, d0_glwe, base: int, levels: int, N: int, q: int):
     
     return glwe_add(prod, d0_glwe, q)
 
-def glwe_rotate(C, rot, N, q):
+def glwe_rotate(C, rot: int, N: int, q: int):
     A, B = C
     A_new = [poly_rotate(a, rot, N, q) for a in A]
     B_new = poly_rotate(B, rot, N, q)
@@ -133,6 +133,47 @@ def blind_rotation(V, a_, b_, s_ggsws, base, levels, N, q):
         V0 = cmux(sel, d1, d0, base, levels, N, q)
     
     return V0
+
+def generate_ksk(extracted_key, target_key, base, levels, q):
+    k_target = len(target_key)
+    ksk = []
+    
+    for s_bit in extracted_key:
+        ksk_i = []
+        for j in range(1, levels + 1):
+            a = [random.randint(0, q - 1) for _ in range(k_target)]
+            e = round(random.gauss(0, 1))
+            
+            gadget_val = round(q / (base ** j))
+            message = (s_bit * gadget_val) % q
+            
+            b = (sum(a[x] * target_key[x] for x in range(k_target)) + e + message) % q
+            ksk_i.append((a, b))
+            
+        ksk.append(ksk_i)
+        
+    return ksk
+
+def key_switch(LWE_c, KSK, base, levels, q):
+    a, b = LWE_c
+    k = len(a)
+    n_out = len(KSK[0][0][0]) 
+    
+    a_out = [0] * n_out
+    b_out = b
+    
+    a_scaled = [round((a_i * (base ** levels)) / q) % (base ** levels) for a_i in a]
+    decomp_a = gadget_decomposition(a_scaled, k, base, levels)
+
+    for i in range(k):
+        for j in range(levels):
+            digit = decomp_a[j][i]
+            a_ksk, b_ksk = KSK[i][j]
+            
+            a_out = [(x - digit * y) % q for x, y in zip(a_out, a_ksk)]
+            b_out = (b_out - digit * b_ksk) % q
+            
+    return (a_out, b_out)
 
 if __name__ == "__main__":
     poly = [2, 3, -4, -1]

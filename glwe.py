@@ -2,7 +2,7 @@ import random
 from typing import List, Tuple
 from helper import *
 
-# CipherText = Tuple[List[List[int]], List[int]]
+CipherTextGLWE = Tuple[List[List[int]], List[int]]
 
 class GLWE:
     def __init__(self, q: int, t: int, k: int, N: int):
@@ -15,7 +15,7 @@ class GLWE:
     def key_gen(self) -> List[List[int]]:
         return [[random.randint(0, 1) for _ in range(self.N)] for _ in range(self.k)]
 
-    def encrypt(self, S: List[List[int]], M: List[int]):
+    def encrypt(self, S: List[List[int]], M: List[int]) -> CipherTextGLWE:
         A = [[random.randint(0, self.q - 1) for _ in range(self.N)] for _ in range(self.k)]
         E = [round(random.gauss(0, 1)) for _ in range(self.N)]
         # E = [0 for _ in range(self.N)] # during testing w/o bootstrapping
