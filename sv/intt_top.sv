@@ -44,11 +44,19 @@ module intt_top import tfhe_pkg::*; (
 
     always_comb begin
         stride = LOG_N'(1) << (LOG_N'(LOG_N - 1) - stage);
+    end
+
+    always_comb begin
         group_start = (b_cnt & ~(stride - LOG_N'(1))) << LOG_N'(1);
         offset = b_cnt & (stride - LOG_N'(1));
+    end
+
+    always_comb begin
         addr_a = group_start + offset;
         addr_b = addr_a + stride;
+    end
         
+    always_comb begin
         a = mem[addr_a];
         b = mem[addr_b];
     end
