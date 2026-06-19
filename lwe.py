@@ -16,7 +16,7 @@ class LWE:
     
     def encrypt(self, S: List[int], m: int) -> CipherTextLWE:
         a = [random.randint(0, self.q - 1) for _ in range(self.k)]
-        e = round(random.gauss(0, 1))
+        e = round(random.gauss(0, 0.5))
         b = sum([a[i] * S[i] for i in range(self.k)]) + self.delta * m + e
 
         return (a, b % self.q) # will have this as bit manipulation later

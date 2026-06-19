@@ -137,7 +137,7 @@ def gate_test(m1, m2, const, v = 1):
 
 # with keyswitching
 def gate_test_key(m1, m2, const, v = 1):
-    q = 4096   
+    q = 256   
     t = 8
     k = 4
     N = 8      
