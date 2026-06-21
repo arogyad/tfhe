@@ -101,13 +101,7 @@ module tb_ntt_mul;
         #10;
 
         for (int i = 0; i < N; i = i + 1) begin
-            logic [WORD_SIZE - 1:0] final_val;
-            logic [127:0] prod;
-            
-            prod = 128'(intt_out[i]) * 128'(64'hEFFFFFFF10000001); // N^-1
-            final_val = WORD_SIZE'(prod % 128'(q));
-
-            $display("out[%0d] = %0h", i, final_val); // [1, 4, 4, 0, ..., 0] so (1 + 4x + 4x^2) matches
+            $display("out[%0d] = %0h", i, intt_out[i]); // [1, 4, 4, 0, ..., 0] so (1 + 4x + 4x^2) matches
         end
 
         $finish;

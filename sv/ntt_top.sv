@@ -76,6 +76,8 @@ module ntt_top import tfhe_pkg::*;(
                     b_cnt <= 0;
                     if (start) begin
                         for (int i = 0; i < N; i++) begin
+                            // Should have used dif for NTT and dit for INTT
+                            // so I don't have to bit reverse each time
                             mem[i] <= in_data[bitrev(LOG_N'(i))];
                         end
                         state <= RUN;

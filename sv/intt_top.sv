@@ -98,7 +98,7 @@ module intt_top import tfhe_pkg::*; (
 
                 FINISH: begin
                     for(int i = 0; i < N; i++) begin
-                        out_data[i] <= mem[bitrev(LOG_N'(i))];
+                        out_data[i] <= WORD_SIZE'((128'(mem[bitrev(LOG_N'(i))]) * 128'(N_INV)) % 128'(q));
                     end
                     done <= 1'b1;
                     state <= IDLE;
