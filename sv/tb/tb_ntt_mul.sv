@@ -1,4 +1,4 @@
-module test_ntt_mul;
+module tb_ntt_mul;
 
     import tfhe_pkg::*;
 
