@@ -5,10 +5,10 @@ module external_product import tfhe_pkg::*; #(
     input logic clk,
     input logic rst,
     input logic start,
-    input logic [WORD_SIZE - 1: 0] C [0: 1][0: N - 1],
-    input logic [WORD_SIZE - 1: 0] BSK_i [0: (2 * L) - 1][0: N - 1], // because RLWE our k = 1, so BSK_i is (2 * L) polynomials
+    input data_t C [0: 1][0: N - 1],
+    input data_t BSK_i [0: (2 * L) - 1][0: N - 1], // because RLWE our k = 1, so BSK_i is (2 * L) polynomials
     output logic done,
-    output logic [WORD_SIZE - 1: 0] out_data [0: 1][0: N - 1]
+    output data_t out_data [0: 1][0: N - 1]
 );
 
     typedef enum logic [3:0] {IDLE, RUN_DECOMP, RUN_NTT, RUN_MUL, RUN_INTT, FINISH} state_t;
@@ -17,8 +17,8 @@ module external_product import tfhe_pkg::*; #(
     logic a_decomp_done;
     logic b_decomp_done;
 
-    logic [WORD_SIZE - 1: 0] out_data_a [0: L - 1][0: N - 1];
-    logic [WORD_SIZE - 1: 0] out_data_b [0: L - 1][0: N - 1];
+    data_t out_data_a [0: L - 1][0: N - 1];
+    data_t out_data_b [0: L - 1][0: N - 1];
 
     gadget_decomp #(.L(L), .LOG_BETA(LOG_BETA)) decomp_a(
         .clk(clk),
@@ -40,13 +40,13 @@ module external_product import tfhe_pkg::*; #(
 
     logic ntt_start;
     logic [L - 1: 0] ntt_done_a, ntt_done_b;
-    logic [WORD_SIZE - 1: 0] ntt_out_a [0: L - 1][0: N - 1];
-    logic [WORD_SIZE - 1: 0] ntt_out_b [0: L - 1][0: N - 1];
+    data_t ntt_out_a [0: L - 1][0: N - 1];
+    data_t ntt_out_b [0: L - 1][0: N - 1];
 
     logic mul_start;
     logic [L - 1: 0] mul_done_a, mul_done_b;
-    logic [WORD_SIZE - 1: 0] mul_out_a [0: L - 1][0: N - 1];
-    logic [WORD_SIZE - 1: 0] mul_out_b [0: L - 1][0: N - 1];
+    data_t mul_out_a [0: L - 1][0: N - 1];
+    data_t mul_out_b [0: L - 1][0: N - 1];
 
     genvar i;
     generate
@@ -77,8 +77,8 @@ module external_product import tfhe_pkg::*; #(
         end
     endgenerate 
 
-    logic [WORD_SIZE - 1: 0] accum_a [0: N - 1];
-    logic [WORD_SIZE - 1: 0] accum_b [0: N - 1];
+    data_t accum_a [0: N - 1];
+    data_t accum_b [0: N - 1];
 
     function automatic logic [WORD_SIZE - 1:0] add_reduce(input logic [WORD_SIZE:0] v);
         if (v >= {1'b0, q}) 

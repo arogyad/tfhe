@@ -1,7 +1,7 @@
 module intt_twiddle import tfhe_pkg::*; (
     input  logic [LOG_N - 1:0] stage,
     input  logic [LOG_N - 1:0] j,
-    output logic [WORD_SIZE - 1:0] w
+    output data_t w
 );
     // these were calculated using https://github.com/CeresB/tfhe-processor-artifacts/tree/main/src/ntt_param_computation.ipynb
     always_comb begin

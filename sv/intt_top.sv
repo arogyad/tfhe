@@ -2,9 +2,9 @@ module intt_top import tfhe_pkg::*; (
     input logic     clk,
     input logic     rst,
     input logic     start,
-    input logic [WORD_SIZE - 1:0] in_data [0:N - 1],
+    input data_t in_data [0:N - 1],
     output logic    done,
-    output logic [WORD_SIZE - 1:0] out_data [0: N - 1]
+    output data_t out_data [0: N - 1]
 );
     typedef enum logic [1:0] {IDLE, RUN, FINISH} state_t;
     state_t state;
@@ -12,8 +12,8 @@ module intt_top import tfhe_pkg::*; (
     logic [LOG_N - 1:0] stage;
     logic [LOG_N - 1:0] b_cnt;
 
-    logic [WORD_SIZE - 1:0] mem[0: N - 1];
-    logic [WORD_SIZE - 1:0] a, b, w, u, v;
+    data_t mem[0: N - 1];
+    data_t a, b, w, u, v;
     
     logic [LOG_N - 1:0] stride;
     logic [LOG_N - 1:0] addr_a, addr_b;

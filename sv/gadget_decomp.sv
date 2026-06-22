@@ -7,9 +7,9 @@ module gadget_decomp import tfhe_pkg::*; #(
     input logic clk,
     input logic rst,
     input logic start,
-    input logic [WORD_SIZE - 1: 0] in_data [0: N - 1],
+    input data_t in_data [0: N - 1],
     output logic done,
-    output logic [WORD_SIZE - 1: 0] out_data [0: L - 1][0: N - 1]
+    output data_t out_data [0: L - 1][0: N - 1]
 );
     typedef enum logic [1:0] {IDLE, RUN, FINISH} state_t;
     state_t state;
@@ -30,11 +30,11 @@ module gadget_decomp import tfhe_pkg::*; #(
                 end
 
                 RUN: begin
-                    automatic logic [WORD_SIZE - 1: 0] val = in_data[i] >> SHIFT;
-                    automatic logic [WORD_SIZE - 1: 0] carry = 0;
+                    automatic data_t val = in_data[i] >> SHIFT;
+                    automatic data_t carry = 0;
 
                     for(int j = 0; j < L; j++) begin
-                        automatic logic [WORD_SIZE - 1: 0] piece;
+                        automatic data_t piece;
                         piece = (val & ((1 << LOG_BETA) - 1)) + carry;
 
                         if(piece >= (1 << (LOG_BETA - 1))) begin
