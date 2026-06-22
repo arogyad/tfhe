@@ -7,7 +7,6 @@ module mod_alu import tfhe_pkg::*; (
     logic [127:0] v;
     logic [65:0] a, b, c, d;
     logic signed [65:0] r_val;
-    localparam logic signed [65:0] q_signed = signed'({2'b0, q});
 
     always_comb begin
         v = val1 * val2;
