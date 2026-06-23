@@ -9,4 +9,4 @@ intt_butterfly.sv
 intt_twiddle.sv
 external_product.sv
 
-./tb/tb_external_product.sv
+./tb/tb_ntt_mul.sv

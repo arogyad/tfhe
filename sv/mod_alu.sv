@@ -5,8 +5,8 @@ module mod_alu import tfhe_pkg::*; (
 );
 
     logic [127:0] v;
-    logic [65:0] a, b, c, d;
-    logic signed [65:0] r_val;
+    logic [WORD_SIZE + 1:0] a, b, c, d;
+    logic signed [WORD_SIZE + 1:0] r_val;
 
     always_comb begin
         v = val1 * val2;
@@ -16,6 +16,7 @@ module mod_alu import tfhe_pkg::*; (
         c = 66'(v[63:32]);
         d = 66'(v[31:0]); 
 
+        // (b + c) max 33 << 32 = 65 and signed 66 bits
         r_val = ((b + c) << 32) + d - a - b;
 
         if (r_val >= q_signed) 
