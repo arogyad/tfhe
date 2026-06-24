@@ -6,7 +6,7 @@ module blind_rotation_iter import tfhe_pkg::*; #(
     input logic rst,
     input logic start,
     input data_t C [0:1][0: N - 1],
-    input data_t BSK_i[0: (2 * L) - 1][0: N - 1],
+    input data_t BSK_i[0: (2 * L) - 1][0:1][0: N - 1],
     input data_t a_i,
     output logic done,
     output data_t C_prime [0: 1][0: N - 1]

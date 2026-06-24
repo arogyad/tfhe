@@ -8,7 +8,7 @@ module tb_blind_rotation_iter;
     logic rst;
     logic start;
     logic [WORD_SIZE - 1: 0] C [0: 1][0: N - 1];
-    logic [WORD_SIZE - 1: 0] BSK_i [0: (2 * L) - 1][0: N - 1];
+    logic [WORD_SIZE - 1: 0] BSK_i [0: (2 * L) - 1][0:1][0: N - 1];
     data_t a_i;
     logic done;
     logic [WORD_SIZE - 1: 0] C_prime [0: 1][0: N - 1];
@@ -42,7 +42,8 @@ module tb_blind_rotation_iter;
 
         for (int i = 0; i < 2 * L; i++) begin
             for (int j = 0; j < N; j++) begin
-                BSK_i[i][j] = WORD_SIZE'(i + j); 
+                BSK_i[i][0][j] = WORD_SIZE'(i + j); 
+                BSK_i[i][1][j] = WORD_SIZE'(i + j); 
             end
         end
         a_i = 5;

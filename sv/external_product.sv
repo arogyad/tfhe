@@ -6,7 +6,7 @@ module external_product import tfhe_pkg::*; #(
     input logic rst,
     input logic start,
     input data_t C [0: 1][0: N - 1],
-    input data_t BSK_i [0: (2 * L) - 1][0: N - 1], // because RLWE our k = 1, so BSK_i is (2 * L) polynomials
+    input data_t BSK_i [0: (2 * L) - 1][0:1][0: N - 1], // because RLWE our k = 1, so BSK_i is (2 * L) polynomials
     output logic done,
     output data_t out_data [0: 1][0: N - 1]
 );
@@ -45,39 +45,75 @@ module external_product import tfhe_pkg::*; #(
     data_t ntt_out_b [0: L - 1][0: N - 1];
 
     logic mul_start;
-    logic [L - 1: 0] mul_done_a, mul_done_b;
-    data_t mul_out_a [0: L - 1][0: N - 1];
-    data_t mul_out_b [0: L - 1][0: N - 1];
+    logic [L - 1: 0] mul_done_a0, mul_done_b0, mul_done_a1, mul_done_b1;
+    data_t mul_out_a0 [0: L - 1][0: N - 1]; // d0 * A
+    data_t mul_out_b0 [0: L - 1][0: N - 1]; // d0 * B
+    data_t mul_out_a1 [0: L - 1][0: N - 1]; // d1 * A
+    data_t mul_out_b1 [0: L - 1][0: N - 1]; // d1 * B
 
     genvar i;
     generate
-        for (i = 0; i < L; i++) begin
+        for (i = 0; i < L; i++) begin : gen_mult_paths
             ntt_top ntt_a (
-                .clk(clk), .rst(rst), .start(ntt_start),
-                .in_data(out_data_a[i]), .done(ntt_done_a[i]), .out_data(ntt_out_a[i])
-            );
-
-            pointwise_mult mul_a (
-                .clk(clk), .rst(rst), .start(mul_start),
-                .in_a(ntt_out_a[i]), 
-                .in_b(BSK_i[i]),
-                .done(mul_done_a[i]), .out_data(mul_out_a[i])
+                .clk(clk),
+                .rst(rst),
+                .start(ntt_start),
+                .in_data (out_data_a[i]),
+                .done(ntt_done_a[i]),
+                .out_data(ntt_out_a[i])
             );
 
             ntt_top ntt_b (
-                .clk(clk), .rst(rst), .start(ntt_start),
-                .in_data(out_data_b[i]), .done(ntt_done_b[i]), .out_data(ntt_out_b[i])
+                .clk(clk),
+                .rst(rst),
+                .start(ntt_start),
+                .in_data (out_data_b[i]),
+                .done(ntt_done_b[i]),
+                .out_data(ntt_out_b[i])
             );
 
-            pointwise_mult mul_b (
-                .clk(clk), .rst(rst), .start(mul_start),
-                .in_a(ntt_out_b[i]), 
-                .in_b(BSK_i[i + L]),
-                .done(mul_done_b[i]), .out_data(mul_out_b[i])
+            pointwise_mult mul_a0 (
+                .clk(clk),
+                .rst(rst),
+                .start(mul_start),
+                .in_a(ntt_out_a[i]),
+                .in_b(BSK_i[i][0]),
+                .done(mul_done_a0[i]),
+                .out_data(mul_out_a0[i])
+            );
+
+            pointwise_mult mul_b0 (
+                .clk(clk),
+                .rst(rst),
+                .start(mul_start),
+                .in_a(ntt_out_a[i]),
+                .in_b(BSK_i[i][1]),
+                .done(mul_done_b0[i]),
+                .out_data(mul_out_b0[i])
+            );
+
+            pointwise_mult mul_a1 (
+                .clk(clk),
+                .rst(rst),
+                .start(mul_start),
+                .in_a(ntt_out_b[i]),
+                .in_b(BSK_i[i + L][0]),
+                .done(mul_done_a1[i]),
+                .out_data(mul_out_a1[i])
+            );
+
+            pointwise_mult mul_b1 (
+                .clk(clk),
+                .rst(rst),
+                .start(mul_start),
+                .in_a(ntt_out_b[i]),
+                .in_b(BSK_i[i + L][1]),
+                .done(mul_done_b1[i]),
+                .out_data(mul_out_b1[i])
             );
         end
-    endgenerate 
-
+    endgenerate
+    
     data_t accum_a [0: N - 1];
     data_t accum_b [0: N - 1];
 
@@ -94,8 +130,11 @@ module external_product import tfhe_pkg::*; #(
             accum_a[j] = 0;
             accum_b[j] = 0;
             for (int k = 0; k < L; k++) begin
-                accum_a[j] = add_reduce(accum_a[j] + mul_out_a[k][j]);
-                accum_b[j] = add_reduce(accum_b[j] + mul_out_b[k][j]);
+                accum_a[j] = add_reduce(accum_a[j] + mul_out_a0[k][j]);
+                accum_a[j] = add_reduce(accum_a[j] + mul_out_a1[k][j]);
+                
+                accum_b[j] = add_reduce(accum_b[j] + mul_out_b0[k][j]);
+                accum_b[j] = add_reduce(accum_b[j] + mul_out_b1[k][j]);
             end
         end
     end
@@ -157,7 +196,7 @@ module external_product import tfhe_pkg::*; #(
 
                 RUN_MUL: begin
                     mul_start <= 1'b0;
-                    if (&mul_done_a && &mul_done_b) begin
+                    if (&mul_done_a0 && &mul_done_b0 && &mul_done_a1 && &mul_done_b1) begin
                         state <= RUN_INTT;
                         intt_start <= 1'b1;
                     end

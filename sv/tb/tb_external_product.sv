@@ -8,7 +8,7 @@ module tb_external_product;
     logic rst;
     logic start;
     logic [WORD_SIZE - 1: 0] C [0: 1][0: N - 1];
-    logic [WORD_SIZE - 1: 0] BSK_i [0: (2 * L) - 1][0: N - 1];
+    logic [WORD_SIZE - 1: 0] BSK_i [0: (2 * L) - 1][0:1][0: N - 1];
     logic done;
     logic [WORD_SIZE - 1: 0] out_data [0: 1][0: N - 1];
 
@@ -40,7 +40,8 @@ module tb_external_product;
 
         for (int i = 0; i < 2 * L; i++) begin
             for (int j = 0; j < N; j++) begin
-                BSK_i[i][j] = WORD_SIZE'(i + j); 
+                BSK_i[i][0][j] = WORD_SIZE'(i + j); 
+                BSK_i[i][1][j] = WORD_SIZE'(i + j); 
             end
         end
 
