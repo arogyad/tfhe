@@ -14,6 +14,7 @@ module external_product import tfhe_pkg::*; #(
     typedef enum logic [3:0] {IDLE, RUN_DECOMP, RUN_NTT, RUN_MUL, RUN_INTT, FINISH} state_t;
     state_t state;
 
+    logic decomp_start;
     logic a_decomp_done;
     logic b_decomp_done;
 
@@ -23,7 +24,7 @@ module external_product import tfhe_pkg::*; #(
     gadget_decomp #(.L(L), .LOG_BETA(LOG_BETA)) decomp_a(
         .clk(clk),
         .rst(rst),
-        .start(start),
+        .start(decomp_start),
         .in_data(C[0]),
         .done(a_decomp_done),
         .out_data(out_data_a)
@@ -32,7 +33,7 @@ module external_product import tfhe_pkg::*; #(
     gadget_decomp #(.L(L), .LOG_BETA(LOG_BETA)) decomp_b(
         .clk(clk),
         .rst(rst),
-        .start(start),
+        .start(decomp_start),
         .in_data(C[1]),
         .done(b_decomp_done),
         .out_data(out_data_b)
@@ -81,8 +82,8 @@ module external_product import tfhe_pkg::*; #(
     data_t accum_b [0: N - 1];
 
     function automatic logic [WORD_SIZE - 1:0] add_reduce(input logic [WORD_SIZE:0] v);
-        if (v >= {1'b0, q}) 
-            add_reduce = WORD_SIZE'(v - {1'b0, q});
+        if (v >= q_signed_2) 
+            add_reduce = WORD_SIZE'(v - q_signed_2);
         else 
             add_reduce = WORD_SIZE'(v);
     endfunction
@@ -124,6 +125,7 @@ module external_product import tfhe_pkg::*; #(
         if(rst) begin
             state <= IDLE;
             done <= 1'b0;
+            decomp_start <= 1'b0;
             ntt_start <= 1'b0;
             mul_start <= 1'b0;
             intt_start <= 1'b0;
@@ -131,10 +133,14 @@ module external_product import tfhe_pkg::*; #(
             case (state)
                 IDLE: begin
                     done <= 1'b0;
-                    if (start) state <= RUN_DECOMP;
+                    if (start) begin
+                        decomp_start <= 1'b1;
+                        state <= RUN_DECOMP;
+                    end
                 end
 
                 RUN_DECOMP: begin
+                    decomp_start <= 1'b0;
                     if(a_decomp_done && b_decomp_done) begin 
                         state <= RUN_NTT;
                         ntt_start <= 1'b1;

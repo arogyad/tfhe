@@ -30,7 +30,8 @@ module gadget_decomp import tfhe_pkg::*; #(
                 end
 
                 RUN: begin
-                    automatic data_t val = in_data[i] >> SHIFT;
+                    // previously I had floor, but the operation is closet integer
+                    automatic data_t val = (in_data[i] + (data_t'(1) << (SHIFT - 1))) >> SHIFT;
                     automatic data_t carry = 0;
 
                     for(int j = 0; j < L; j++) begin

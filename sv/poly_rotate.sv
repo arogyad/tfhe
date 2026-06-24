@@ -4,7 +4,7 @@ module poly_rotate import tfhe_pkg::*; (
     input logic start,
     input data_t poly [0: N - 1],
     /* verilator lint_off UNUSEDSIGNAL */
-    input data_t rot, // TODO: Maybe pass the value mod 2*N instead of data_t
+    input data_t rot, // TODO: Maybe pass the value mod 2*N instead of data_t, but a_i is data_t
     /* verilator lint_on UNUSEDSIGNAL */ 
     output logic done,
     output data_t out_data [0: N - 1]

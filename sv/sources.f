@@ -8,5 +8,6 @@ intt_top.sv
 intt_butterfly.sv
 intt_twiddle.sv
 external_product.sv
+blind_rotation_iter.sv
 
-./tb/tb_ntt_mul.sv
+./tb/tb_blind_rotation_iter.sv

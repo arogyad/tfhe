@@ -60,7 +60,7 @@ def gadget_decomposition(poly: List[int], N: int, base: int, levels: int) -> Lis
         t = poly[i]
         
         for l in reversed(range(levels)):
-            result[l][i] = t % base
+            result[l][i] = int(t % base)
             t = t // base 
     return result
 
@@ -176,5 +176,6 @@ def key_switch(LWE_c, KSK, base, levels, q):
     return (a_out, b_out)
 
 if __name__ == "__main__":
-    poly = [2, 3, -4, -1]
-    print(poly_rotate(poly, -1, 4, 8)) # [3, 4, 7, 6] = [3, -4, -1, -2] mod q
+    poly = list(range(16))
+    prime = 0xFFFFFFFF00000001
+    print([hex(i) for i in poly_rotate(poly, 5, 16, prime) ])
