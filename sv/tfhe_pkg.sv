@@ -1,6 +1,7 @@
 package tfhe_pkg;
 
     /* verilator lint_off UNUSEDPARAM */
+    localparam int n = 16; // size of lwe
     localparam int N = 16; // size of poly
     localparam int WORD_SIZE = 64;
     localparam int LOG_N = 4;

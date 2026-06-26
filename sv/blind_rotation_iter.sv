@@ -59,7 +59,7 @@ module blind_rotation_iter import tfhe_pkg::*; #(
 
     function automatic logic [WORD_SIZE - 1:0] reduce(input logic signed [WORD_SIZE : 0] v);
         if (v >= q_signed_2) 
-            reduce = WORD_SIZE'(v - {1'b0, q});
+            reduce = WORD_SIZE'(v - q_signed_2);
         else if (v < 0) begin
             reduce = WORD_SIZE'(v + q_signed_2);
         end else begin 

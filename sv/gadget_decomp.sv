@@ -39,7 +39,7 @@ module gadget_decomp import tfhe_pkg::*; #(
                         piece = (val & ((1 << LOG_BETA) - 1)) + carry;
 
                         if(piece >= (1 << (LOG_BETA - 1))) begin
-                            out_data[L - 1 - j][i] <= piece - (1 << LOG_BETA);
+                            out_data[L - 1 - j][i] <= piece + q - (1 << LOG_BETA);
                             carry = 1;
                         end else begin
                             out_data[L - 1 - j][i] <= piece;

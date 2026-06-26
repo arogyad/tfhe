@@ -9,5 +9,6 @@ intt_butterfly.sv
 intt_twiddle.sv
 external_product.sv
 blind_rotation_iter.sv
+blind_rotation.sv
 
-./tb/tb_blind_rotation_iter.sv
+./tb/tb_blind_rotation.sv
