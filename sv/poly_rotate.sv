@@ -32,7 +32,7 @@ module poly_rotate import tfhe_pkg::*; (
                     if (rot[LOG_N: 0] >= (LOG_N + 1)'(N)) begin
                         sign <= -1;
                         rot2 <= rot[LOG_N : 0] - (LOG_N + 1)'(N);
-                        $display("Rotation is: %0d", rot2);
+                        // $display("Rotation is: %0d", rot2);
                     end else begin
                         sign <= 1;
                         rot2 <= rot[LOG_N : 0];
