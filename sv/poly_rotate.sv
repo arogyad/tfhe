@@ -3,9 +3,7 @@ module poly_rotate import tfhe_pkg::*; (
     input logic rst,
     input logic start,
     input data_t poly [0: N - 1],
-    /* verilator lint_off UNUSEDSIGNAL */
-    input data_t rot, // TODO: Maybe pass the value mod 2*N instead of data_t, but a_i is data_t
-    /* verilator lint_on UNUSEDSIGNAL */ 
+    input logic [LOG_N : 0] rot,
     output logic done,
     output data_t out_data [0: N - 1]
 );
@@ -29,13 +27,13 @@ module poly_rotate import tfhe_pkg::*; (
                     done <= 1'b0; 
                     i <= 0;
 
-                    if (rot[LOG_N: 0] >= (LOG_N + 1)'(N)) begin
+                    if (rot >= (LOG_N + 1)'(N)) begin
                         sign <= -1;
-                        rot2 <= rot[LOG_N : 0] - (LOG_N + 1)'(N);
+                        rot2 <= rot - (LOG_N + 1)'(N);
                         // $display("Rotation is: %0d", rot2);
                     end else begin
                         sign <= 1;
-                        rot2 <= rot[LOG_N : 0];
+                        rot2 <= rot;
                     end
                     
                     if (start) state <= RUN;

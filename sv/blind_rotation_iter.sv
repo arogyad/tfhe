@@ -7,7 +7,9 @@ module blind_rotation_iter import tfhe_pkg::*; #(
     input logic start,
     input data_t C [0:1][0: N - 1],
     input data_t BSK_i[0: (2 * L) - 1][0:1][0: N - 1],
+    /* verilator lint_off UNUSEDSIGNAL */
     input data_t a_i,
+    /* verilator lint_on UNUSEDSIGNAL */
     output logic done,
     output data_t C_prime [0: 1][0: N - 1]
 );
@@ -40,7 +42,7 @@ module blind_rotation_iter import tfhe_pkg::*; #(
         .rst(rst),
         .start(poly_r_start),
         .poly(external_product_out[0]),
-        .rot(a_i),
+        .rot(a_i[WORD_SIZE - 1: WORD_SIZE - (LOG_N + 1)]), // scaling from q -> 2N
         .done(poly_a_done),
         .out_data(poly_out[0])
     );
@@ -50,7 +52,7 @@ module blind_rotation_iter import tfhe_pkg::*; #(
         .rst(rst),
         .start(poly_r_start),
         .poly(external_product_out[1]),
-        .rot(a_i),
+        .rot(a_i[WORD_SIZE - 1: WORD_SIZE - (LOG_N + 1)]),
         .done(poly_b_done),
         .out_data(poly_out[1])
     );

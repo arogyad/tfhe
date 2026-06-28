@@ -6,7 +6,7 @@ module tb_poly_rotate;
 
     logic start;
     data_t poly[0: N - 1];
-    data_t rot;
+    logic [LOG_N : 0] rot;
     logic done;
     data_t out_data [0: N - 1];
 
@@ -29,7 +29,7 @@ module tb_poly_rotate;
         for (int i = 0; i < N; i++) begin
             poly[i] = WORD_SIZE'(i);
         end
-        rot = 5;
+        rot = 0;
 
         rst = 1;
         start = 0;

@@ -13,7 +13,7 @@ module blind_rotation import tfhe_pkg::*; #(
     output data_t out_data [0:1][0: N - 1]
 );
 
-    typedef enum logic [2:0] {IDLE, RUN, FINISH} state_t;
+    typedef enum logic [1:0] {IDLE, RUN, FINISH} state_t;
     state_t state;
 
     logic [LOG_N - 1: 0] i;
@@ -57,6 +57,7 @@ module blind_rotation import tfhe_pkg::*; #(
                         if(i == LOG_N'(n - 1)) begin
                             state <= FINISH;
                         end else begin
+                            $display("Blind Rotation Processing at index: %0d", i);
                             i <= i + 1;
                             blind_iter_start <= 1'b1;
                         end
