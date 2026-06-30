@@ -64,10 +64,6 @@ def gadget_decomp(C: RLWE):
 
 # this generates the BSK by encrypting each bit in s with s_rlwe
 def generate_bsk(s: SecretLWE, s_rlwe: SecretRLWE):
-    j_idx = np.arange(N, dtype=np.float64)
-    twst = np.exp(-1j * np.pi * j_idx / N) # numpy seems to run ftt for X^{n} - 1, but i need X^{n} + 1
-    itwst = np.exp(1j * np.pi * j_idx / N)
-
     s_rlwe_ftt = np.fft.fft(s_rlwe * twst)
     shifts = 64 - (np.arange(1, l + 1, dtype=np.int64) * np.uint64(beta_bits))
     g = np.uint64(1) << shifts
@@ -100,7 +96,19 @@ def generate_bsk(s: SecretLWE, s_rlwe: SecretRLWE):
         bsk[i, :, 0, :] = a
         bsk[i, :, 1, :] = b
 
-    return bsk 
+    # i am keeping bsk as fft so I can just multiply later in external product, similar to hardware implementation paper
+    return np.fft.fft(bsk * twst, axis=-1)
+
+def external_product(c: RLWE, bsk_i: RGSW):
+    c_decomp = gadget_decomp(c).reshape(2 * l, 1, N)
+    c_decomp_fft = np.fft.fft(c_decomp * twst, axis = -1)
+
+    # this broadcasts the (2 * l, 1, N) across the (2 * l, 2, N) of bsk_i
+    # this gives us (2 * l, 2, N) values which are then summed over the levels
+    # giving us (2, N), which is the same matrix multiplication as G^-1(c) * C_1 (RGSW)
+    product_fft = np.sum(c_decomp_fft * bsk_i, axis=0)
+
+    return np.round((np.fft.ifft(product_fft, axis = 1) * itwst).real).astype(np.uint64)
 
 if __name__ == "__main__":
     s = np.random.randint(0, 2, n, dtype=np.uint64)
