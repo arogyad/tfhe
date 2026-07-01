@@ -1,9 +1,9 @@
 import numpy as np
 
-q = 2**64
+q = 2**32 # i had to drop this to 2**32 because my multiplications were blowing up
 p = 4
 t = 2
-delta = 2**62
+delta = 2**30
 
 n = 500
 N = 512
