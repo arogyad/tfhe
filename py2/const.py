@@ -10,12 +10,15 @@ N = 512
 
 l = 2
 B = 1024
-beta_bits = 10
+beta_bits = np.log2(B)
 # k = 1
 
 sg_lwe = 2**(-15)
 sg_rlwe = 2**(-25)
 
+k_base = 2
+k_levels = 8
+k_base_bits = np.log2(k_base)
 
 j_idx = np.arange(N, dtype=np.float64)
 twst = np.exp(-1j * np.pi * j_idx / N) # numpy seems to run ftt for X^{n} - 1, but i need X^{n} + 1

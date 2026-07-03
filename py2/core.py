@@ -64,6 +64,7 @@ def rlwe_rotate(C: RLWE, rot: np.int64) -> RLWE:
 
 # Decomposes a RLWE, which is size (2, N) into (2, L, N)
 # The decomposition goes from MSB to LSB, so L = i is decomp at q/B^(i + 1)
+# I have to make this function take more than just RLWE so that I can do decomp later on for ksk
 def gadget_decomp(C: RLWE):
     shifts = 32 - (np.arange(1, l + 1, dtype=np.uint32) * np.uint32(beta_bits))
 
@@ -147,7 +148,7 @@ def blind_rotation(V: RLWE, C_lwe: LWE, bsk: RGSW):
     V0 = rlwe_rotate(V, -np.int64(C_lwe[-1]))
 
     for i in range(n):
-        V1 = rlwe_rotate(V0, C_lwe[i])
+        V1 = rlwe_rotate(V0, np.int64(C_lwe[i]))
         V0 = cmux(V0, V1, bsk[i])
     
     return V0
@@ -174,11 +175,45 @@ def bootstrap(C_lwe: LWE, V: RLWE, bsk: RGSW):
 
     return sample_extract(V_me)
 
+def generate_ksk(s_rlwe: SecretRLWE, s: SecretLWE):
+    # similar to gadget decomp it creates B^-j at different levels
+    shifts = 32 - (np.arange(1, k_levels + 1, dtype=np.uint32) * np.uint32(k_base_bits))
+    g = np.uint32(1) << shifts
+
+    ksk = ksk = np.zeros((N, k_levels, n + 1), dtype=np.uint32)
+
+    # i could do a outer product to calculate this but this is clearer
+    for i in range(N):
+        for j in range(k_levels):
+            a = np.random.randint(0, int(q), size=n, dtype=np.uint32)
+            e = np.random.normal(0.0, sg_lwe * float(q))
+            e = np.round(e).astype(np.int64).astype(np.uint32)
+
+            # encrypting s_rlwe_i * B^{-j}
+            m = s_rlwe[i] * g[j]
+
+            b = np.dot(a, s) + m + e
+
+            ksk[i, j, :-1] = a
+            ksk[i, j, -1] = b
+    
+    return ksk
+    
+
 if __name__ == "__main__":
     s = np.random.randint(0, 2, n, dtype=np.uint32)
     s_rlwe = np.random.randint(0, 2, N, dtype=np.uint32)
     bsk = generate_bsk(s, s_rlwe)
-    C_lwe = encrypt_lwe(s, 1)
-    V = np.random.randint(0, 10, (2, N), dtype=np.uint32)
-    bootstrap(C_lwe, V, bsk)
-   
+
+    c1 = encrypt_lwe(s, 1)
+    c2 = encrypt_lwe(s, 0)
+
+    # for and
+    C_lwe = add_lwe(c1, c2) - 1
+
+    # V = np.random.randint(0, 10, (2, N), dtype=np.uint32)
+    a = np.full(N, delta, dtype=np.uint32)
+    b = np.zeros(N, dtype=np.uint32)
+    ans = bootstrap(C_lwe, np.vstack((a, b)), bsk)
+
+    print(generate_ksk(s_rlwe, s).shape)
