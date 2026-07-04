@@ -91,17 +91,17 @@ def gadget_decomp_1d(val: np.ndarray) -> np.ndarray:
 
     shifts = shifts.reshape(k_levels, 1) # (l, 1)
 
-    mask = B - np.uint32(1)
+    mask = k_base - np.uint32(1)
     val_decomposed = ((val >> shifts) & mask).astype(np.int64) # (l, 1)
-    half_B = np.int64(B // 2)
+    half_B = np.int64(k_base // 2)
 
     for i in range(k_levels - 1, 0, -1):
         carry = ( val_decomposed[i] >= half_B ).astype(np.int64)
-        val_decomposed[i] -= carry * np.int64(B)
+        val_decomposed[i] -= carry * np.int64(k_base)
         val_decomposed[i - 1] += carry
 
     carry = ( val_decomposed[0] >= half_B ).astype(np.int64)
-    val_decomposed[0] -= carry * np.int64(B)
+    val_decomposed[0] -= carry * np.int64(k_base)
 
     return val_decomposed
 
@@ -216,7 +216,6 @@ def generate_ksk(s_rlwe: SecretRLWE, s: SecretLWE) -> LeV:
 
             ksk[i, j, :-1] = a
             ksk[i, j, -1] = b
-    
     # size of [N, k_levels, n + 1]
     return ksk
     
@@ -232,6 +231,6 @@ def key_switch(C_lwe: LWE, ksk: LeV) -> LWE:
     a_decomp = gadget_decomp_1d(a_) 
     
     # multiply and then sum over n level
-    final_ = np.einsum("ji, ijk -> k", a_decomp, ksk)
+    final_ = np.einsum("ji, ijk -> k", a_decomp, ksk).astype(np.uint32)
 
     return c_ - final_

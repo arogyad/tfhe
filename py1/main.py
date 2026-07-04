@@ -185,19 +185,19 @@ if __name__ == "__main__":
     and_gate(-1, -1) # -1
     and_gate(-1, 1) # -1
     and_gate(1, -1) # -1
-    and_gate(1, 1) # 1 !!
+    and_gate(1, 1) # 1
 
     print("OR:")
     or_gate(-1, -1) # -1
     or_gate(-1, 1) # 1
     or_gate(1, -1) # 1
-    or_gate(1, 1) # 1 !!
+    or_gate(1, 1) # 1
 
     print("NAND:")
     nand_gate(-1, -1) # 1
     nand_gate(-1, 1) # 1
     nand_gate(1, -1) # 1
-    nand_gate(1, 1) # -1 !!
+    nand_gate(1, 1) # -1
 
 
 
