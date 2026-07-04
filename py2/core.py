@@ -195,6 +195,24 @@ def bootstrap(C_lwe: LWE, V: RLWE, bsk: RGSW) -> LWE:
 
     return sample_extract(V_me)
 
+def generate_ksk_fast(s_rlwe: SecretRLWE, s: SecretLWE) -> LeV:
+    shifts = 32 - (np.arange(1, k_levels + 1, dtype=np.uint32) * np.uint32(k_base_bits))
+    g = np.uint32(1) << shifts
+
+    M = np.outer(s_rlwe, g)
+
+    A = np.random.randint(0, int(q), size=(N, k_levels, n), dtype=np.uint32)
+    E = np.random.normal(0.0, sg_lwe * float(q), size=(N, k_levels))
+    E = np.round(E).astype(np.int64).astype(np.uint32)
+
+    B = np.tensordot(A, s, axes=1) + M + E
+
+    ksk = np.zeros((N, k_levels, n + 1), dtype=np.uint32)
+    ksk[:, :, :-1] = A
+    ksk[:, :, -1] = B
+    
+    return ksk
+
 def generate_ksk(s_rlwe: SecretRLWE, s: SecretLWE) -> LeV:
     # similar to gadget decomp it creates B^-j at different levels
     shifts = 32 - (np.arange(1, k_levels + 1, dtype=np.uint32) * np.uint32(k_base_bits))

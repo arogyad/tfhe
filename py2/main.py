@@ -1,5 +1,6 @@
 import numpy as np
 import warnings
+import time
 from const import *
 from core import *
 
@@ -9,7 +10,7 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 s = np.random.randint(0, 2, n, dtype=np.uint32)
 s_rlwe = np.random.randint(0, 2, N, dtype=np.uint32)
 bsk = generate_bsk(s, s_rlwe)
-ksk = generate_ksk(s_rlwe, s)
+ksk = generate_ksk_fast(s_rlwe, s)
 
 mu_val = np.uint32(1 << 29)
 V = np.zeros((2, N), dtype=np.uint32)
@@ -65,13 +66,13 @@ if __name__ == "__main__":
     print("1 & 1: ", AND(1, 1))
 
     print("OR:")
-    print("0 & 0: ", OR(0, 0))
-    print("0 & 1: ", OR(0, 1))
-    print("1 & 0: ", OR(1, 0))
-    print("1 & 1: ", OR(1, 1))
+    print("0 | 0: ", OR(0, 0))
+    print("0 | 1: ", OR(0, 1))
+    print("1 | 0: ", OR(1, 0))
+    print("1 | 1: ", OR(1, 1))
 
     print("NAND:")
-    print("0 & 0: ", NAND(0, 0))
-    print("0 & 1: ", NAND(0, 1))
-    print("1 & 0: ", NAND(1, 0))
-    print("1 & 1: ", NAND(1, 1))
+    print("~(0 & 0): ", NAND(0, 0))
+    print("~(0 & 1): ", NAND(0, 1))
+    print("~(1 & 0): ", NAND(1, 0))
+    print("~(1 & 1): ", NAND(1, 1))
