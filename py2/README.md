@@ -1,0 +1,1 @@
+My main source of reference for this implementation is the book [SoK: Fully Homomorphic Encryption over the Torus](https://marcjoye.github.io/papers/Joy22dtorus.pdf). In this book the math is represented mostly in matrix form and the pseudo code were given as appendix, so implementation naturally translated to numpy.
