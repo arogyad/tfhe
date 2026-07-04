@@ -20,7 +20,7 @@ RGSW = npt.NDArray[np.uint32]
 
 Polynomial = npt.NDArray[np.uint32]
 
-def encrypt_lwe(s: SecretLWE, m: np.uint32):
+def encrypt_lwe(s: SecretLWE, m: np.uint32) -> LWE:
     a = np.random.randint(0, q, n, dtype=np.uint32)
     e = np.random.normal(0.0, sg_lwe * float(q))
     e = np.round(e).astype(np.int64).astype(np.uint32)
@@ -28,16 +28,16 @@ def encrypt_lwe(s: SecretLWE, m: np.uint32):
 
     return np.append(a, b)
 
-def decrypt_lwe(s: SecretLWE, c: LWE):
+def decrypt_lwe(s: SecretLWE, c: LWE) -> np.ndarray:
     a = c[:-1]
     b = c[-1]
     dm_e = (b - np.dot(a, s))
     return np.uint32(((dm_e + (delta / 2)) // delta) % p)
 
-def add_lwe(c0: LWE, c1: LWE):
+def add_lwe(c0: LWE, c1: LWE) -> LWE:
     return c0 + c1
 
-def mul_lwe(c0: LWE, const: np.uint32):
+def mul_lwe(c0: LWE, const: np.uint32) -> LWE:
     return np.multiply(c0, const)
 
 def poly_rotate(poly: Polynomial, rot: np.int64) -> Polynomial:
@@ -65,7 +65,7 @@ def rlwe_rotate(C: RLWE, rot: np.int64) -> RLWE:
 # Decomposes a RLWE, which is size (2, N) into (2, L, N)
 # The decomposition goes from MSB to LSB, so L = i is decomp at q/B^(i + 1)
 # I have to make this function take more than just RLWE so that I can do decomp later on for ksk
-def gadget_decomp(C: RLWE):
+def gadget_decomp(C: RLWE) -> np.ndarray:
     shifts = 32 - (np.arange(1, l + 1, dtype=np.uint32) * np.uint32(beta_bits))
 
     C_expand = np.expand_dims(C, 1) # (2, 1, N)
@@ -85,7 +85,8 @@ def gadget_decomp(C: RLWE):
 
     return C_decomposed
 
-def gadget_decomp_1d(val: np.ndarray):
+# I could simplify the above decomposition to use this but I think the above one is faster for the given dimension
+def gadget_decomp_1d(val: np.ndarray) -> np.ndarray:
     shifts = 32 - (np.arange(1, k_levels + 1, dtype=np.uint32) * np.uint32(k_base_bits))
 
     shifts = shifts.reshape(k_levels, 1) # (l, 1)
@@ -105,7 +106,7 @@ def gadget_decomp_1d(val: np.ndarray):
     return val_decomposed
 
 # this generates the BSK by encrypting each bit in s with s_rlwe
-def generate_bsk(s: SecretLWE, s_rlwe: SecretRLWE):
+def generate_bsk(s: SecretLWE, s_rlwe: SecretRLWE) -> RGSW:
     s_rlwe_ftt = np.fft.fft(s_rlwe * twst)
     shifts = 32 - (np.arange(1, l + 1, dtype=np.uint32) * np.uint32(beta_bits))
     g = np.uint32(1) << shifts
@@ -143,7 +144,7 @@ def generate_bsk(s: SecretLWE, s_rlwe: SecretRLWE):
     # i am keeping bsk as fft so I can just multiply later in external product, similar to hardware implementation paper
     return np.fft.fft(bsk * twst, axis=-1)
 
-def external_product(c: RLWE, bsk_i: RGSW):
+def external_product(c: RLWE, bsk_i: RGSW) -> np.ndarray:
     c_decomp = gadget_decomp(c).reshape(2 * l, 1, N)
     c_decomp_fft = np.fft.fft(c_decomp * twst, axis = -1)
 
@@ -157,13 +158,13 @@ def external_product(c: RLWE, bsk_i: RGSW):
 # c0: acc_{j - 1}
 # c1: acc_{j - 1} * X^{a_i}
 # sel: rgsw of s_i or bsk[i]
-def cmux(c0: RLWE, c1: RLWE, sel: RGSW):
+def cmux(c0: RLWE, c1: RLWE, sel: RGSW) -> RLWE:
     sub_rlwe = c1 - c0
     prod = external_product(sub_rlwe, sel)
     return prod + c0
 
 # computing the decryption in the encrypted polynomial power so we rotate to the correct coefficient
-def blind_rotation(V: RLWE, C_lwe: LWE, bsk: RGSW):
+def blind_rotation(V: RLWE, C_lwe: LWE, bsk: RGSW) -> RLWE:
     V0 = rlwe_rotate(V, -np.int64(C_lwe[-1]))
 
     for i in range(n):
@@ -172,7 +173,7 @@ def blind_rotation(V: RLWE, C_lwe: LWE, bsk: RGSW):
     
     return V0
 
-def bootstrap(C_lwe: LWE, V: RLWE, bsk: RGSW):
+def bootstrap(C_lwe: LWE, V: RLWE, bsk: RGSW) -> LWE:
     # we need to convert the LWE from q -> 2N so
     # we can compute the decryption in the power of polynomial V
     def modulus_switch(C: LWE) -> LWE:
@@ -194,7 +195,7 @@ def bootstrap(C_lwe: LWE, V: RLWE, bsk: RGSW):
 
     return sample_extract(V_me)
 
-def generate_ksk(s_rlwe: SecretRLWE, s: SecretLWE):
+def generate_ksk(s_rlwe: SecretRLWE, s: SecretLWE) -> LeV:
     # similar to gadget decomp it creates B^-j at different levels
     shifts = 32 - (np.arange(1, k_levels + 1, dtype=np.uint32) * np.uint32(k_base_bits))
     g = np.uint32(1) << shifts
@@ -219,7 +220,7 @@ def generate_ksk(s_rlwe: SecretRLWE, s: SecretLWE):
     # size of [N, k_levels, n + 1]
     return ksk
     
-def key_switch(C_lwe: LWE, ksk):
+def key_switch(C_lwe: LWE, ksk: LeV) -> LWE:
     c_ = np.zeros(n + 1, dtype=np.uint32)
     c_[-1] = C_lwe[-1] # initializing (0, ..., 0, b)
 
