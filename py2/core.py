@@ -42,8 +42,8 @@ def mul_lwe(c0: LWE, const: np.uint32):
 
 def poly_rotate(poly: Polynomial, rot: np.int64) -> Polynomial:
     rot = rot % (2 * N) 
-    poly = poly.astype(np.int32)
-    sign = 1
+    poly = poly.astype(np.int64)
+    sign = np.int64(1)
 
     if rot >= N:
         sign = -1
@@ -84,6 +84,25 @@ def gadget_decomp(C: RLWE):
     C_decomposed[:, 0, :] -= carry * np.int64(B)
 
     return C_decomposed
+
+def gadget_decomp_1d(val: np.ndarray):
+    shifts = 32 - (np.arange(1, k_levels + 1, dtype=np.uint32) * np.uint32(k_base_bits))
+
+    shifts = shifts.reshape(k_levels, 1) # (l, 1)
+
+    mask = B - np.uint32(1)
+    val_decomposed = ((val >> shifts) & mask).astype(np.int64) # (l, 1)
+    half_B = np.int64(B // 2)
+
+    for i in range(k_levels - 1, 0, -1):
+        carry = ( val_decomposed[i] >= half_B ).astype(np.int64)
+        val_decomposed[i] -= carry * np.int64(B)
+        val_decomposed[i - 1] += carry
+
+    carry = ( val_decomposed[0] >= half_B ).astype(np.int64)
+    val_decomposed[0] -= carry * np.int64(B)
+
+    return val_decomposed
 
 # this generates the BSK by encrypting each bit in s with s_rlwe
 def generate_bsk(s: SecretLWE, s_rlwe: SecretRLWE):
@@ -180,7 +199,7 @@ def generate_ksk(s_rlwe: SecretRLWE, s: SecretLWE):
     shifts = 32 - (np.arange(1, k_levels + 1, dtype=np.uint32) * np.uint32(k_base_bits))
     g = np.uint32(1) << shifts
 
-    ksk = ksk = np.zeros((N, k_levels, n + 1), dtype=np.uint32)
+    ksk = np.zeros((N, k_levels, n + 1), dtype=np.uint32)
 
     # i could do a outer product to calculate this but this is clearer
     for i in range(N):
@@ -197,23 +216,21 @@ def generate_ksk(s_rlwe: SecretRLWE, s: SecretLWE):
             ksk[i, j, :-1] = a
             ksk[i, j, -1] = b
     
+    # size of [N, k_levels, n + 1]
     return ksk
     
+def key_switch(C_lwe: LWE, ksk):
+    c_ = np.zeros(n + 1, dtype=np.uint32)
+    c_[-1] = C_lwe[-1] # initializing (0, ..., 0, b)
 
-if __name__ == "__main__":
-    s = np.random.randint(0, 2, n, dtype=np.uint32)
-    s_rlwe = np.random.randint(0, 2, N, dtype=np.uint32)
-    bsk = generate_bsk(s, s_rlwe)
+    a_ = C_lwe[:-1]
+    # this gives us (k_levels, N)
+    # since I am multiplying each N at k_levels to same level N in ksk
+    # I can just reduce the entire sum_{1 -> N} sum_{1 -> k_levels} (a_i)_l ksk[i, j]
+    # to matrix multiplication
+    a_decomp = gadget_decomp_1d(a_) 
+    
+    # multiply and then sum over n level
+    final_ = np.einsum("ji, ijk -> k", a_decomp, ksk)
 
-    c1 = encrypt_lwe(s, 1)
-    c2 = encrypt_lwe(s, 0)
-
-    # for and
-    C_lwe = add_lwe(c1, c2) - 1
-
-    # V = np.random.randint(0, 10, (2, N), dtype=np.uint32)
-    a = np.full(N, delta, dtype=np.uint32)
-    b = np.zeros(N, dtype=np.uint32)
-    ans = bootstrap(C_lwe, np.vstack((a, b)), bsk)
-
-    print(generate_ksk(s_rlwe, s).shape)
+    return c_ - final_
