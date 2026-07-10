@@ -2,8 +2,8 @@ module pointwise_mult import tfhe_pkg::*; (
     input logic clk,
     input logic rst,
     input logic start,
-    input data_t in_a [0:N - 1], // NTT
-    input data_t in_b [0:N - 1], // NTT
+    input data_t in_a [0:N - 1],
+    input data_t in_b [0:N - 1],
     output logic done,
     output data_t out_data [0:N - 1]
 );
