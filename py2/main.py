@@ -7,10 +7,13 @@ from core import *
 # the overflow error is very annoying
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
+start = time.perf_counter()
 s = np.random.randint(0, 2, n, dtype=np.uint32)
 s_rlwe = np.random.randint(0, 2, N, dtype=np.uint32)
 bsk = generate_bsk(s, s_rlwe)
 ksk = generate_ksk_fast(s_rlwe, s)
+end = time.perf_counter()
+print(f"Key Generation Time: {end - start:.4f} seconds.")
 
 mu_val = np.uint32(1 << 29)
 V = np.zeros((2, N), dtype=np.uint32)
@@ -59,6 +62,7 @@ def NAND(m1, m2):
     return decrypt_lwe(s, final_lwe)
 
 if __name__ == "__main__":
+    eval_start = time.perf_counter()
     print("AND:")
     print("0 & 0: ", AND(0, 0))
     print("0 & 1: ", AND(0, 1))
@@ -76,3 +80,6 @@ if __name__ == "__main__":
     print("~(0 & 1): ", NAND(0, 1))
     print("~(1 & 0): ", NAND(1, 0))
     print("~(1 & 1): ", NAND(1, 1))
+    eval_end = time.perf_counter()
+    total_eval_time = eval_end - eval_start
+    print(f"Total time for 12 gates: {total_eval_time:.4f} seconds.")

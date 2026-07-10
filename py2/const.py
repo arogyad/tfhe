@@ -8,7 +8,7 @@ delta = 2**30
 n = 500
 N = 512
 
-l = 3
+l = 2 # 2 also works
 B = 1024
 beta_bits = int(np.log2(B))
 # k = 1
