@@ -16,9 +16,10 @@ module keyswitching_iter import tfhe_pkg::*; #(
     logic  a_decomp_start;
     logic a_decomp_done;
     data_t a_decomp_out [0: KEY_L - 1];
-    gadget_decomp #(.L(KEY_L), .LOG_BETA(KEY_LOG_BETA)) decomp_a (
+    gadget_decomp_scalar #(.L(KEY_L), .LOG_BETA(KEY_LOG_BETA)) decomp_a (
         .clk(clk),
         .rst(rst),
+        .in_data(A),
         .start(a_decomp_start),
         .done(a_decomp_done),
         .out_data(a_decomp_out)
@@ -31,12 +32,13 @@ module keyswitching_iter import tfhe_pkg::*; #(
     // initiate KEY_L number of pointwise multiplication
     generate
         for (gi = 0; gi < KEY_L; gi++) begin: gen_mult
-            pointwise_mult mul_a(
+            // parameterize this
+            pointwise_mult_scalar mul_a(
                 .clk(clk),
                 .rst(rst),
                 .start(a_mul_start),
-                .in_a( '{ (n+1){ a_decomp_out[gi] } } ),
-                .in_b( KSK_i[gi] ),
+                .a( a_decomp_out[gi] ),
+                .b( KSK_i[gi] ),
                 .done(a_mul_done[gi]),
                 .out_data(a_mul_out[gi])
             );
@@ -52,7 +54,7 @@ module keyswitching_iter import tfhe_pkg::*; #(
 
     always_comb begin
         for (int i = 0; i < n + 1; i++) begin
-            accum_i[i] = 0;
+            accum_i[i] = '0;
             for (int j = 0; j < KEY_L; j++) begin
                 accum_i[i] = add_reduce(accum_i[i] + a_mul_out[j][i]);
             end
