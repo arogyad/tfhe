@@ -7,7 +7,7 @@ module keyswitching_mult import tfhe_pkg::*; #(
     input logic start,
     input data_t A[0: N - 1],
     input data_t KSK [0: N - 1][0: KEY_L - 1][0: n],
-    output data_t total_sum[0: n],
+    output data_t total_sum[0: n], 
     output logic done
 );
     typedef enum logic [1:0] {IDLE, RUN_ITER, FINISH} state_t;
