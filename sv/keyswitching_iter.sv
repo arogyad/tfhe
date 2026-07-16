@@ -1,3 +1,4 @@
+// calculates <Decomp(a_i), KSK>
 module keyswitching_iter import tfhe_pkg::*; #(
     parameter KEY_L = 8,
     parameter KEY_LOG_BETA = 4

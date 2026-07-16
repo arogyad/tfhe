@@ -35,7 +35,7 @@ module pointwise_mult_scalar import tfhe_pkg::*; (
 
                 RUN: begin
                     out_data[i] <= mult_out;
-                    if(i == (LOG_n + 1)'(n - 1)) begin
+                    if(i == (LOG_n + 1)'(n)) begin
                         state <= FINISH;
                     end else begin
                         i <= i + 1;

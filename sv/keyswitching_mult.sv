@@ -1,3 +1,4 @@
+// this calculates the \sum^{N - 1}_{i = 0} <Decomp(a_i), KSK>
 module keyswitching_mult import tfhe_pkg::*; #(
     parameter KEY_L = 8,
     parameter KEY_LOG_BETA = 4

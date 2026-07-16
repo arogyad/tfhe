@@ -4,8 +4,8 @@ package tfhe_pkg;
     localparam int n = 16; // size of lwe, should be 500
     localparam int N = 16; // size of poly, should be 512
     localparam int WORD_SIZE = 64;
-    localparam int LOG_N = 4;
-    localparam int LOG_n = 4;
+    localparam int LOG_N = $clog2(N);
+    localparam int LOG_n = $clog2(n);
 
     localparam logic [WORD_SIZE - 1:0] q = 64'hFFFFFFFF00000001; // solinas prime as taken from the research paper
     localparam logic signed [WORD_SIZE + 1:0] q_signed = signed'({2'b0, q});
